@@ -1,11 +1,13 @@
-use std::collections::HashMap;
+use kv::{Config, Error, Manager, ValueRef};
 
 mod bag {
-    pub struct Cache {
-        cache: HashMap<String, Vec<u8>>,
+    struct Cache {
+        manager: Manager
     }
 
-    impl bag {
-        
+    impl Cache {
+        pub fn set (&self, key: String, value: Vec<u8>) {
+            
+        }
     }
 }
