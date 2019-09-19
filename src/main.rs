@@ -1,3 +1,9 @@
+pub mod bag;
+
 fn main() {
-    println!("Hello, world!");
+    let cache = bag::Cache::new();
+    cache.set("default", "key", "valueee");
+    let v = cache.get("default", "key").unwrap();
+    println!("{}", v);
+
 }
