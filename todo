@@ -1,4 +1,0 @@
-1. In-memory key value store (string -> binary)
-2. Accept IPC to print to console
-3. Accept IPC to set a value
-4. Accept IPC to get a value
