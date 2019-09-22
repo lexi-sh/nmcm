@@ -1,43 +1,42 @@
 use crate::core::{Suggestion, Accept, Nack, PermissionGranted};
 
-use std::collections::HashMap;
-
 pub struct Cache {
-    value_map: HashMap<u32, u32>,
+    value: Option<u32>,
     cache_id: u32,
-    last_accepted_suggestion: Option<Suggestion>
+    last_accepted_suggestion: Option<Suggestion>,
+    is_online: bool
 }
 
 impl Cache {
 
-    pub fn new(id: u32) -> Cache {
-        let hashmap = HashMap::new();
+    pub fn new(id: u32, is_online: bool) -> Cache {
         Cache {
-            value_map: hashmap,
+            value: None,
             cache_id: id,
-            last_accepted_suggestion: None
+            last_accepted_suggestion: None,
+            is_online: is_online
         }
     }
 
-    pub fn get(&self, key: u32) -> Option<u32> {
-        if self.value_map.contains_key(&key) {
-            Some(self.value_map[&key])
-        }
-        else {
-            None
-        }
+    pub fn get(&self) -> Option<u32> {
+        self.value
     }
 
-    pub fn generate_suggestion(&self, key: u32, proposed_value: u32) -> Suggestion {
+    pub fn generate_suggestion(&self, proposed_value: u32) -> Option<Suggestion> {
         let last_suggestion_id = match self.last_accepted_suggestion {
             None => 0,
             Some(val) => val.id
         };
-        Suggestion {
+        let suggestion = Suggestion {
             id: last_suggestion_id + 1,
             cache_id: self.cache_id,
-            key: key,
             value: proposed_value
+        };
+        if self.is_online {
+            Some(suggestion)
+        }
+        else {
+            None
         }
     }
 
@@ -54,8 +53,8 @@ impl Cache {
         }
     }
 
-    pub fn request(&mut self, suggestion: Suggestion) -> Result<PermissionGranted, Nack> {
-        let last_accepted_value = self.get(suggestion.key);
+    pub fn request(&self, suggestion: Suggestion) -> Result<PermissionGranted, Nack> {
+        let last_accepted_value = self.get();
         let permission_granted = PermissionGranted {
             corresponding_suggestion: suggestion,
             last_accepted_suggestion: self.last_accepted_suggestion,
