@@ -54,11 +54,6 @@ impl PaxosCoordinator {
     }
 
     pub fn get(&self) -> Option<u32> {
-        let mut responses = Vec::new();
-        for cache in &self.nodes {
-            responses.push(cache.get());
-        }
-
         let mut current_max_response_count = 0;
         let mut current_max_response: Option<u32> = None;
         for (response, group) in &self.nodes.iter()
