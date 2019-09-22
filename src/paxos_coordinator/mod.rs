@@ -23,10 +23,14 @@ impl PaxosCoordinator {
         }
     }
 
-    pub fn get_suggestion_for_set(&self, value: u32) -> Option<Suggestion> {
+    fn get_suggestion_for_set(&self, value: u32) -> Option<Suggestion> {
         for node in &self.nodes {
             match node.generate_suggestion(value) {
                 Some(suggestion) => {
+                    let num_permission_granted_nodes = self.nodes.iter().filter_map(|node| node.request(suggestion).ok()).count();
+                    if num_permission_granted_nodes < self.responses_required_for_quorum() {
+                        continue;
+                    }
                     return Some(suggestion);
                 }
                 None => { }
@@ -36,17 +40,10 @@ impl PaxosCoordinator {
     }
 
     pub fn set(&mut self, value: u32) -> Result<(), ()> {
-        
         match self.get_suggestion_for_set(value) {
             Some(suggestion) => {
-                let responses_required_for_quorum = self.responses_required_for_quorum();
-                let num_permission_granted_nodes = self.nodes.iter().filter_map(|node| node.request(suggestion).ok()).count();
-                if num_permission_granted_nodes < responses_required_for_quorum {
-                    return Err(());
-                }
-
                 let num_suggestions_rejected = self.nodes.iter_mut().filter_map(|node| node.suggest(suggestion).err()).count();
-                if num_suggestions_rejected < responses_required_for_quorum {
+                if num_suggestions_rejected < self.responses_required_for_quorum() {
                     return Ok(());
                 }
                 return Err(());
@@ -80,6 +77,14 @@ impl PaxosCoordinator {
         else {
             None
         }
+    }
+
+    pub fn set_cache_online_status(&mut self, cache_id: u32, status: bool) {
+        println!("Cache {} online status set to {}", cache_id, status);
+        match self.nodes.iter_mut().find(|node| node.cache_id == cache_id) {
+            Some(cache) => cache.set_online_status(status),
+            None => panic!(format!("Tried to set cache status to {} for cache id {} which does not exist.", status, cache_id))
+        };
     }
 
     fn responses_required_for_quorum(&self) -> usize {
